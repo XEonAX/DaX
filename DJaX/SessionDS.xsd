@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="SessionDS" targetNamespace="http://tempuri.org/SessionDS.xsd" xmlns:mstns="http://tempuri.org/SessionDS.xsd" xmlns="http://tempuri.org/SessionDS.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="SessionDS" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="SessionDS" msprop:Generator_UserDSName="SessionDS">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="SessionTable" msprop:Generator_TableClassName="SessionTableDataTable" msprop:Generator_TableVarName="tableSessionTable" msprop:Generator_TablePropName="SessionTable" msprop:Generator_RowDeletingName="SessionTableRowDeleting" msprop:Generator_RowChangingName="SessionTableRowChanging" msprop:Generator_RowEvHandlerName="SessionTableRowChangeEventHandler" msprop:Generator_RowDeletedName="SessionTableRowDeleted" msprop:Generator_UserTableName="SessionTable" msprop:Generator_RowChangedName="SessionTableRowChanged" msprop:Generator_RowEvArgName="SessionTableRowChangeEvent" msprop:Generator_RowClassName="SessionTableRow">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="dcUrl" msdata:Caption="Url" msprop:Generator_ColumnVarNameInTable="columndcUrl" msprop:Generator_ColumnPropNameInRow="dcUrl" msprop:Generator_ColumnPropNameInTable="dcUrlColumn" msprop:Generator_UserColumnName="dcUrl" type="xs:string" minOccurs="0" />
+              <xs:element name="dcSize" msdata:Caption="Size" msprop:Generator_ColumnVarNameInTable="columndcSize" msprop:Generator_ColumnPropNameInRow="dcSize" msprop:Generator_ColumnPropNameInTable="dcSizeColumn" msprop:Generator_UserColumnName="dcSize" type="xs:int" minOccurs="0" />
+              <xs:element name="colReq" msdata:DataType="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" msdata:Caption="Request" msprop:Generator_ColumnVarNameInTable="columncolReq" msprop:Generator_ColumnPropNameInRow="colReq" msprop:Generator_ColumnPropNameInTable="colReqColumn" msprop:Generator_UserColumnName="colReq" type="xs:anyType" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
