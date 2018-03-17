@@ -27,7 +27,7 @@ namespace DaX
 
         private void button1_Click(object btnsender, EventArgs e)
         {
-            List<Session> oAllSessions = new List<Session>();
+            List<Fiddler.Session> oAllSessions = new List<Fiddler.Session>();
 
             // <-- Personalize for your Application, 64 chars or fewer
             FiddlerApplication.SetAppDisplayName("FiddlerDaX");
@@ -117,10 +117,10 @@ namespace DaX
                 }
             };
 
-            FiddlerApplication.AfterSessionComplete += delegate (Session oS)
-            {
-                Console.WriteLine("Finished session:\t" + oS.fullUrl);
-            };
+            FiddlerApplication.AfterSessionComplete += (oS) =>
+           {
+               Console.WriteLine("Finished session:\t" + oS.fullUrl);
+           };
 
             #endregion AttachEventListeners
 
@@ -199,7 +199,7 @@ namespace DaX
             {
                 var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(id)), Path.GetFileName(id) + "_DaX_" + "*" + "_XaD_" + "*");
                 var destname = idfiles[0];
-                destname = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "DaXDL",destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
+                destname = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "DaXDL", destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
 
                 using (Stream destStream = File.OpenWrite(destname))
                 {
