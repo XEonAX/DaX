@@ -31,11 +31,12 @@
             this.components = new System.ComponentModel.Container();
             this.button1 = new System.Windows.Forms.Button();
             this.dgv = new System.Windows.Forms.DataGridView();
-            this.sessionTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.sessionDS = new DaX.SessionDS();
             this.dcUrlDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dcSizeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDL = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.sessionTableBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.sessionDS = new DaX.SessionDS();
+            this.button2 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgv)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sessionTableBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sessionDS)).BeginInit();
@@ -72,16 +73,6 @@
             this.dgv.TabIndex = 1;
             this.dgv.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgv_CellContentClick);
             // 
-            // sessionTableBindingSource
-            // 
-            this.sessionTableBindingSource.DataMember = "SessionTable";
-            this.sessionTableBindingSource.DataSource = this.sessionDS;
-            // 
-            // sessionDS
-            // 
-            this.sessionDS.DataSetName = "SessionDS";
-            this.sessionDS.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
-            // 
             // dcUrlDataGridViewTextBoxColumn
             // 
             this.dcUrlDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -105,11 +96,33 @@
             this.colDL.Name = "colDL";
             this.colDL.Text = "Download";
             // 
+            // sessionTableBindingSource
+            // 
+            this.sessionTableBindingSource.DataMember = "SessionTable";
+            this.sessionTableBindingSource.DataSource = this.sessionDS;
+            // 
+            // sessionDS
+            // 
+            this.sessionDS.DataSetName = "SessionDS";
+            this.sessionDS.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            // 
+            // button2
+            // 
+            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button2.Location = new System.Drawing.Point(963, 216);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 27);
+            this.button2.TabIndex = 0;
+            this.button2.Text = "button1";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1038, 276);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.dgv);
             this.Name = "Form1";
@@ -130,6 +143,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dcUrlDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn dcSizeDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewButtonColumn colDL;
+        private System.Windows.Forms.Button button2;
     }
 }
 
