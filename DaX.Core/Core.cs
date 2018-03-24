@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
 
 namespace DaX
 {
@@ -57,7 +57,7 @@ namespace DaX
 
         private void FiddlerApplication_AfterSessionComplete(Fiddler.Session oS)
         {
-            Console.WriteLine("Finished session:\t" + oS.fullUrl);
+            Console.WriteLine("Finished session: (" + DateTime.Now + ")\t" + oS.fullUrl);
         }
 
         private void FiddlerApplication_BeforeResponse(Fiddler.Session oS)
@@ -65,7 +65,7 @@ namespace DaX
             if (oS.oFlags.ContainsKey("dax_id"))
             {
                 oS.utilDecodeResponse();
-                oS.SaveResponseBody(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "DaXCaps", oS.oFlags["dax_id"] + "_DaX_" + oS.RequestHeaders["Range"].Substring("bytes=".Length) + "_XaD_" + oS.SuggestedFilename));
+                oS.SaveResponseBody(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps", oS.oFlags["dax_id"] + "_DaX_" + oS.RequestHeaders["Range"].Substring("bytes=".Length) + "_XaD_" + oS.SuggestedFilename));
                 oS.ResponseBody = null;
                 GC.Collect();
             }
@@ -75,7 +75,10 @@ namespace DaX
         {
             Console.WriteLine("{0}:HTTP {1} for {2}", oS.id, oS.responseCode, oS.fullUrl);
             var contentlength = oS.ResponseHeaders["Content-Length"];
-            ResponseHeadersAvailable?.Invoke(this, new SessionEventArgs(oS, this));
+            if (!oS.oFlags.ContainsKey("dax_id"))
+            {
+                ResponseHeadersAvailable?.Invoke(this, new SessionEventArgs(oS, this));
+            }
         }
 
         private void FiddlerApplication_OnReadResponseBuffer(object sender, RawReadEventArgs e)
@@ -104,73 +107,96 @@ namespace DaX
         }
 
 
-        public void SegmentedDownload(Fiddler.Session oS)
-        {
-            var strContentLength = oS.ResponseHeaders["Content-Length"];
-            var intContentLength = int.Parse(strContentLength);
-            int rangeLower = 0;
-            int rangeDelta = intContentLength / 10;
-            List<string> ranges = new List<string>();
-            while (((rangeLower + rangeDelta) < intContentLength))
-            {
-                ranges.Add(rangeLower + " - " + (rangeLower + rangeDelta));
-                rangeLower += rangeDelta + 1;
-            }
-            ranges.Add(rangeLower + " - " + intContentLength);
-            var dax_id = Guid.NewGuid().ToString();
-            ConcurrentBag<Fiddler.Session> sessionbag = new ConcurrentBag<Fiddler.Session>();
-            Parallel.ForEach(ranges, r =>
-            {
-                var requestHeaders = oS.RequestHeaders.Clone() as HTTPRequestHeaders;
-                requestHeaders["Range"] = "bytes=" + r;
-                var newflags = new System.Collections.Specialized.StringDictionary { { "dax_id", dax_id } };
-                var segmentedSession = FiddlerApplication.oProxy.SendRequest(requestHeaders,
-                    oS.RequestBody,
-                    newflags,
-                    (sender, evtstatechangeargs) =>
-                    {
-                        if (evtstatechangeargs.newState == SessionStates.Done)
-                        {
-                            foreach (var session in sessionbag)
-                            {
-                                if (session.state != SessionStates.Done)
-                                {
-                                    return;
-                                }
-                            }
+        //public void SegmentedDownload(Session dsession)
+        //{
+        //    var oS = dsession.fSession;
+        //    var strContentLength = oS.ResponseHeaders["Content-Length"];
+        //    var intContentLength = int.Parse(strContentLength);
+        //    int rangeLower = 0;
+        //    int incre = 1;
+        //    int rangeDelta = intContentLength / 500;
+        //    List<string> ranges = new List<string>();
+        //    List<int> deltas = new List<int>();
+        //    while (((rangeLower + (rangeDelta * incre)) < intContentLength))
+        //    {
+        //        ranges.Add(rangeLower + " - " + (rangeLower + (rangeDelta * incre)));
+        //        rangeLower += (rangeDelta * incre) + 1;
+        //        deltas.Add((rangeDelta * incre));
+        //        incre++;
+        //    }
+        //    ranges.Add(rangeLower + " - " + intContentLength);
+        //    var rangep = Partitioner.Create(0, intContentLength);
+        //    var dax_id = Guid.NewGuid().ToString();
+        //    dsession.DownloadQueue.Clear();// = new ConcurrentBag<Fiddler.Session>();
+        //    int tot = 0;
+        //    int comp = 0;
+        //    dsession.Progress = 0;
+        //    //Parallel.For(0, ranges.Count, r =>
+        //    //foreach (var r in ranges)
+        //    Parallel.ForEach(rangep, new ParallelOptions { MaxDegreeOfParallelism = 3 }, r =>
+        //    {
+        //        var requestHeaders = oS.RequestHeaders.Clone() as HTTPRequestHeaders;
+        //        requestHeaders["Range"] = "bytes=" + r.Item1 + " - " + r.Item2; //+ ranges[r];
+        //        var newflags = new System.Collections.Specialized.StringDictionary { { "dax_id", dax_id } };
 
-                            Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL"));
+        //        Interlocked.Increment(ref tot);
+        //        //tot++;
+        //        var segmentedSession = FiddlerApplication.oProxy.SendRequestAndWait(requestHeaders,
+        //             oS.RequestBody,
+        //             newflags,
+        //             (sender, evtstatechangeargs) =>
+        //             {
+        //                 if (evtstatechangeargs.newState == SessionStates.Done)
+        //                 {
+        //                     Interlocked.Increment(ref comp);
+        //                     //comp++;
+        //                     dsession.Progress = Convert.ToInt32((comp * 100.0) / (tot));
+        //                     foreach (var session in dsession.DownloadQueue)
+        //                     {
+        //                         if (session.fSession.state != SessionStates.Done)
+        //                         {
+        //                             return;
+        //                         }
+        //                     }
+        //                     if (dsession.Progress != 100) return;
+        //                     Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL"));
 
-                            var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
-                            var destname = idfiles[0];
-                            destname = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL", destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
+        //                     var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
+        //                     var destname = idfiles[0];
+        //                     destname = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL", destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
 
-                            using (Stream destStream = File.OpenWrite(destname))
-                            {
-                                foreach (string srcFileName in idfiles.OrderBy(x => x, new AlphanumComparatorFast()))
-                                {
-                                    try
-                                    {
-                                        using (Stream srcStream = File.OpenRead(srcFileName))
-                                        {
-                                            srcStream.CopyTo(destStream);
-                                        }
-                                        File.Delete(srcFileName);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex);
-                                    }
-                                }
-                            }
-                            sessionbag = null;
-                            GC.Collect();
-                        }
-                    });
-                sessionbag.Add(segmentedSession);
-
-            });
-        }
+        //                     using (Stream destStream = File.OpenWrite(destname))
+        //                     {
+        //                         foreach (string srcFileName in idfiles.OrderBy(x => x, new AlphanumComparatorFast()))
+        //                         {
+        //                             try
+        //                             {
+        //                                 using (Stream srcStream = File.OpenRead(srcFileName))
+        //                                 {
+        //                                     srcStream.CopyTo(destStream);
+        //                                 }
+        //                                 File.Delete(srcFileName);
+        //                             }
+        //                             catch (Exception ex)
+        //                             {
+        //                                 Console.WriteLine(ex);
+        //                             }
+        //                         }
+        //                     }
+        //                     Application.Current.Dispatcher.Invoke(() =>
+        //                     {
+        //                         //dsession.SubSessions.Clear();// = new ConcurrentBag<Fiddler.Session>();
+        //                     });
+        //                     GC.Collect();
+        //                 }
+        //             });
+        //        Application.Current.Dispatcher.Invoke(() =>
+        //        {
+        //            dsession.DownloadQueue.Add(new Session(segmentedSession, this));
+        //        });
+        //    }
+        //    );
+        //}
     }
 
 
