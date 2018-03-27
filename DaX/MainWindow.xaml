@@ -68,7 +68,8 @@
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
                       CanUserDeleteRows="False"
-                      CanUserResizeRows="False">
+                      CanUserResizeRows="False"
+                      SelectedItem="{Binding DownloadDetail}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Binding="{Binding ID}"
                                         IsReadOnly="True"
@@ -106,7 +107,7 @@
                                         Header="Size"
                                         Width="Auto" />
                     <DataGridTemplateColumn Header="Actions"
-                                            Width="110"
+                                            Width="Auto"
                                             CanUserResize="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -127,11 +128,11 @@
                                             CommandParameter="{Binding}">
                                         <iconPacks:PackIconModern Kind="Refresh" />
                                     </Button>
-                                    <Button ToolTip="Details"
+                                    <!--<Button ToolTip="Details"
                                             Command="{Binding Path=DataContext.CmdViewDetails, ElementName=MWindow}"
                                             CommandParameter="{Binding}">
                                         <iconPacks:Material Kind="Details" />
-                                    </Button>
+                                    </Button>-->
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -149,6 +150,30 @@
                     <TextBlock Text="{Binding URL}"
                                TextWrapping="WrapWithOverflow"
                                DockPanel.Dock="Top" />
+                    <Grid DockPanel.Dock="Top">
+                        <DataGrid ItemsSource="{Binding RequestHeaders}"
+                                  ColumnWidth="*"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  CanUserResizeRows="False"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True"
+                                  SelectionUnit="FullRow">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Binding="{Binding Name}"
+                                                    IsReadOnly="True"
+                                                    Header="Name"
+                                                    Width="Auto" />
+                                <DataGridTextColumn Binding="{Binding Value}"
+                                                    IsReadOnly="True"
+                                                    Header="Value"
+                                                    Width="Auto" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                    </Grid>
                     <Grid>
                         <DataGrid ItemsSource="{Binding DownloadQueue}"
                                   ColumnWidth="*"
@@ -167,11 +192,29 @@
                                                     IsReadOnly="True"
                                                     Header="End"
                                                     Width="Auto" />
-                                <DataGridCheckBoxColumn Binding="{Binding Processed}"
-                                                        IsReadOnly="True"
-                                                        Header="Processed"
-                                                        Width="Auto"
-                                                        IsThreeState="True" />
+                                <DataGridTemplateColumn IsReadOnly="True"
+                                                        Width="*"
+                                                        Header="Progress">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="5" />
+                                                </Grid.RowDefinitions>
+                                                <CheckBox IsChecked="{Binding Processed}"
+                                                          IsThreeState="True"
+                                                          HorizontalAlignment="Center"
+                                                          IsEnabled="False"
+                                                          Grid.Row="0" />
+                                                <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
+                                                                           Grid.Row="1" />
+
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <DataGridTemplateColumn Header="Actions"
                                                         Width="100">
                                     <DataGridTemplateColumn.CellTemplate>

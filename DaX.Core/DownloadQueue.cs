@@ -62,7 +62,7 @@ namespace DaX
 
         public void Start(int howmany)
         {
-            var rangestostart = Session.DownloadQueue.Where(y => y.Processed==false).Take(howmany);
+            var rangestostart = Session.DownloadQueue.Where(y => y.Processed == false).Take(howmany);
             //foreach (var rangetoremove in rangestostart)
             //{
             //    Ranges.Remove(rangetoremove);
@@ -89,7 +89,9 @@ namespace DaX
                              Start(1);
                              //comp++;
                              Session.Progress = Convert.ToInt32((comp * 100.0) / (tot));
-                             foreach (var session in Session.DownloadQueue)
+                             var tempDQ = Session.DownloadQueue.ToList();
+                             //lock (Session.LockObject)
+                             foreach (var session in tempDQ)
                              {
                                  if (session.Session.state != SessionStates.Done)
                                  {

@@ -71,6 +71,7 @@
     <Compile Include="Core.cs" />
     <Compile Include="DownloadQueue.cs" />
     <Compile Include="DownloadQueueItem.cs" />
+    <Compile Include="Header.cs" />
     <Compile Include="ISession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session.cs" />

@@ -153,10 +153,18 @@ namespace DaX
             }
         }
 
+        public IEnumerable<Header> RequestHeaders
+        {
+            get
+            {
+                return fSession.RequestHeaders.Select(x=>new Header(x));
+            }
+        }
         public AwaitableDelegateCommand<int> CmdDownloadSession { get; set; }
         public SimpleCommand<Session> CmdAbortSession { get; set; }
         public SimpleCommand<Session> CmdRefreshSession { get; set; }
         public SimpleCommand<Session> CmdXSession { get; set; }
 
+        public object LockObject = new object();
     }
 }
