@@ -98,12 +98,12 @@ namespace DaX
 
         private void Log_OnLogString(object sender, LogEventArgs e)
         {
-            Console.WriteLine("** LogString: " + e.LogString);
+            //Console.WriteLine("** LogString: " + e.LogString);
         }
 
         private void FiddlerApplication_OnNotification(object sender, NotificationEventArgs e)
         {
-            Console.WriteLine("** NotifyUser: " + e.NotifyString);
+            //Console.WriteLine("** NotifyUser: " + e.NotifyString);
         }
 
 

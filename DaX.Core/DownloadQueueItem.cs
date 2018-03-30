@@ -13,7 +13,6 @@ namespace DaX
     public class DownloadQueueItem : NotifyBase
     {
         private string _Range;
-        static PropertyInfo _PeekDownloadProgress = typeof(Fiddler.ServerChatter).GetProperty("_PeekDownloadProgress", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         public string Range
         {
             get { return _Range; }
@@ -27,9 +26,9 @@ namespace DaX
             }
         }
 
-        private int _RangeStart;
+        private long _RangeStart;
 
-        public int RangeStart
+        public long RangeStart
         {
             get { return _RangeStart; }
             set
@@ -42,9 +41,9 @@ namespace DaX
             }
         }
 
-        private int _RangeEnd;
+        private long _RangeEnd;
 
-        public int RangeEnd
+        public long RangeEnd
         {
             get { return _RangeEnd; }
             set
@@ -67,8 +66,8 @@ namespace DaX
                 if (_Session != value)
                 {
                     _Session = value;
-                    _Session.OnStateChanged += (sender, e) => State = e.newState;
                     NotifyPropertyChanged();
+                    _Session.OnStateChanged += (sender, e) => State = e.newState;
                 }
             }
         }
@@ -125,8 +124,15 @@ namespace DaX
             ProgressTimer = new DispatcherTimer();
             ProgressTimer.Interval = new TimeSpan(200);
             ProgressTimer.Tick += ProgressTimerCallback;
-
             PropertyChanged += DownloadQueueItem_PropertyChanged;
+            CmdAbortQItem = new SimpleCommand
+            {
+                CanExecuteDelegate = (x) => { return true; },
+                ExecuteDelegate = (x) =>
+                 {
+                     Session.Abort();
+                 }
+            };
         }
 
         private void ProgressTimerCallback(object sender, EventArgs e)
@@ -135,24 +141,27 @@ namespace DaX
             {
                 return;
             }
-            long dprogress = (long)_PeekDownloadProgress.GetValue(Session.oResponse);
+            long dprogress = (long)FiddlerPropertyInfo._PeekDownloadProgress.GetValue(Session.oResponse);
             if (dprogress < 0)
             {
                 dprogress = 0;
             }
-            long clength = default(long);
-            if (Session.oResponse["Content-Length"].Length > 0 && long.TryParse(Session.oResponse["Content-Length"], out clength))
+            if (contentlength == default(long))
             {
-                if (clength == 0)
+                if (Session.oResponse["Content-Length"].Length > 0 && long.TryParse(Session.oResponse["Content-Length"], out contentlength))
                 {
-                    clength = long.MaxValue;
+                    if (contentlength == 0)
+                    {
+                        contentlength = long.MaxValue;
+                    }
+                    var newProgress = Convert.ToInt32((dprogress * 100.0) / (contentlength));
+                    Progress = Math.Max(Progress, newProgress);
                 }
-                var prog = Convert.ToInt32((dprogress * 100.0) / (clength));
-                Progress = Progress < prog ? prog : Progress;
             }
             else
             {
-                //ProgressTimer.Stop();
+                var newProgress = Convert.ToInt32((dprogress * 100.0) / (contentlength));
+                Progress = Math.Max(Progress, newProgress);
             }
         }
 
@@ -172,11 +181,18 @@ namespace DaX
             }
         }
 
-        public SimpleCommand CmdDownloadSession { get; set; }
-        public SimpleCommand CmdAbortSession { get; set; }
-        public SimpleCommand CmdRefreshSession { get; set; }
+        public SimpleCommand CmdDownloadQItem { get; set; }
+        public SimpleCommand CmdAbortQItem { get; set; }
 
         DispatcherTimer ProgressTimer;
 
+        public object LockObject = new object();
+        private long contentlength = default(long);
+    }
+
+
+    internal static class FiddlerPropertyInfo
+    {
+        internal static PropertyInfo _PeekDownloadProgress = typeof(Fiddler.ServerChatter).GetProperty("_PeekDownloadProgress", BindingFlags.NonPublic | BindingFlags.Instance);
     }
 }

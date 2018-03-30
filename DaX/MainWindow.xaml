@@ -10,13 +10,16 @@
                        xmlns:dt="clr-namespace:DaX.DesignTime"
                        xmlns:anx="clr-namespace:AEonAX.Shared;assembly=AEonAX.Shared"
                        mc:Ignorable="d"
-                       Title="DaX - Download aXelerator"
-                       Height="500"
-                       Width="800"
+                       Title="DaX - Download AXelerator"
+                       Height="700"
+                       Width="1400"
                        GlowBrush="{DynamicResource AccentColorBrush}"
                        TitleCharacterCasing="Normal"
                        DataContext="{Binding DaxVM,ElementName=MWindow}"
                        d:DataContext="{d:DesignInstance Type=dt:ViewModel,IsDesignTimeCreatable=True}">
+    <Controls:MetroWindow.Resources>
+        <anx:ByteSizeConverter x:Key="SizeConverter"></anx:ByteSizeConverter>
+    </Controls:MetroWindow.Resources>
     <Controls:MetroWindow.IconTemplate>
         <DataTemplate>
             <iconPacks:PackIconMaterial Width="{TemplateBinding Width}"
@@ -27,223 +30,314 @@
                                         Kind="Rocket" />
         </DataTemplate>
     </Controls:MetroWindow.IconTemplate>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Button Command="{Binding CmdMergeFiles}"
-                    Grid.Column="0"
-                    ToolTip="Stitch Temp Files">
-                <iconPacks:Entypo Kind="Merge" />
-            </Button>
-            <Button Command="{Binding CmdClear}"
-                    ToolTip="Clear Sessions"
-                    Grid.Column="1">
-                <iconPacks:Material Kind="NotificationClearAll" />
-            </Button>
-            <Controls:NumericUpDown Grid.Column="2"
-                                    Maximum="32"
-                                    Minimum="1"
-                                    NumericInputMode="Numbers"
-                                    ToolTip="Max Parallel Connections"
-                                    Value="{Binding MaxParallel}" />
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="480" />
+        </Grid.ColumnDefinitions>
 
+        <DataGrid ItemsSource="{Binding Sessions}"
+                  ColumnWidth="*"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserResizeRows="False"
+                  SelectedItem="{Binding DownloadDetail}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding ID}"
+                                    IsReadOnly="True"
+                                    Header="ID"
+                                    Width="Auto" />
+                <DataGridTemplateColumn IsReadOnly="True"
+                                        Width="*"
+                                        Header="URL">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="5" />
+                                </Grid.RowDefinitions>
+                                <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
+                                                           Grid.Row="1"
+                                                           Minimum="0"
+                                                           Maximum="100" />
+                                <TextBlock Text="{Binding URL}"
+                                           Grid.Row="0" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-        </Grid>
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="280" />
-            </Grid.ColumnDefinitions>
-            <DataGrid ItemsSource="{Binding Sessions}"
-                      ColumnWidth="*"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      CanUserResizeRows="False"
-                      SelectedItem="{Binding DownloadDetail}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Binding="{Binding ID}"
-                                        IsReadOnly="True"
-                                        Header="ID"
-                                        Width="Auto" />
-                    <DataGridTemplateColumn IsReadOnly="True"
-                                            Width="*"
-                                            Header="URL">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="5" />
-                                    </Grid.RowDefinitions>
-                                    <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
-                                                               Grid.Row="1" />
-                                    <TextBlock Text="{Binding URL}"
-                                               Grid.Row="0" />
-                                </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!--<DataGridTextColumn Binding="{Binding URL}"
+                <!--<DataGridTextColumn Binding="{Binding URL}"
                                     IsReadOnly="True"
                                     Width="*"
                                     Header="URL" />-->
-                    <DataGridTextColumn Binding="{Binding Method}"
-                                        IsReadOnly="True"
-                                        Header="Method"
-                                        Width="Auto" />
-                    <DataGridTextColumn Binding="{Binding Size}"
-                                        IsReadOnly="True"
-                                        Header="Size"
-                                        Width="Auto" />
-                    <DataGridTemplateColumn Header="Actions"
-                                            Width="Auto"
-                                            CanUserResize="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button ToolTip="Download"
-                                            Command="{Binding CmdDownloadSession}"
-                                            CommandParameter="{Binding Path=DataContext.MaxParallel, ElementName=MWindow}">
+                <!--<DataGridTextColumn Binding="{Binding Method}"
+                                    IsReadOnly="True"
+                                    Header="Method"
+                                    Width="Auto" />-->
+                <DataGridTextColumn Binding="{Binding Size,Converter={StaticResource SizeConverter}}"
+                                    IsReadOnly="True"
+                                    Header="Size"
+                                    Width="Auto" />
+                <DataGridTemplateColumn Header="Actions"
+                                        Width="Auto"
+                                        CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button ToolTip="Download"
+                                        Command="{Binding CmdDownloadSession}"
+                                        CommandParameter="{Binding Path=DataContext.MaxParallel, ElementName=MWindow}">
 
-                                        <iconPacks:PackIconMaterial Kind="Download" />
-                                    </Button>
-                                    <Button ToolTip="Abort"
-                                            Command="{Binding CmdAbortSession}"
-                                            CommandParameter="{Binding}">
-                                        <iconPacks:PackIconModern Kind="Stop" />
-                                    </Button>
-                                    <Button ToolTip="Refresh"
-                                            Command="{Binding CmdRefreshSession}"
-                                            CommandParameter="{Binding}">
-                                        <iconPacks:PackIconModern Kind="Refresh" />
-                                    </Button>
-                                    <!--<Button ToolTip="Details"
+                                    <iconPacks:PackIconMaterial Kind="Download" />
+                                </Button>
+                                <Button ToolTip="Abort"
+                                        Command="{Binding CmdAbortSession}"
+                                        CommandParameter="{Binding}">
+                                    <iconPacks:PackIconModern Kind="Stop" />
+                                </Button>
+                                <Button ToolTip="Refresh"
+                                        Command="{Binding CmdRefreshSession}"
+                                        CommandParameter="{Binding}">
+                                    <iconPacks:PackIconModern Kind="Refresh" />
+                                </Button>
+                                <!--<Button ToolTip="Details"
                                             Command="{Binding Path=DataContext.CmdViewDetails, ElementName=MWindow}"
                                             CommandParameter="{Binding}">
                                         <iconPacks:Material Kind="Details" />
                                     </Button>-->
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
 
-            </DataGrid>
-            <GridSplitter Grid.Column="1"
-                          ResizeBehavior="PreviousAndNext"
-                          ResizeDirection="Columns"
-                          HorizontalAlignment="Stretch" />
-            <Grid Grid.Column="2"
-                  DataContext="{Binding DownloadDetail}">
-                <DockPanel>
-                    <TextBlock Text="{Binding URL}"
-                               TextWrapping="WrapWithOverflow"
-                               DockPanel.Dock="Top" />
+        </DataGrid>
+        <GridSplitter Grid.Column="1"
+                      ResizeBehavior="PreviousAndNext"
+                      ResizeDirection="Columns"
+                      HorizontalAlignment="Stretch" />
+        <Grid Grid.Column="2">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button Command="{Binding CmdMergeFiles}"
+                            Grid.Column="0"
+                            ToolTip="Stitch Temp Files">
+                        <iconPacks:Entypo Kind="Merge" />
+                    </Button>
+                    <Button Command="{Binding CmdClear}"
+                            ToolTip="Clear Sessions"
+                            Grid.Column="1">
+                        <iconPacks:Material Kind="NotificationClearAll" />
+                    </Button>
+                    <Button Command="{Binding CmdAbort}"
+                            ToolTip="Abort Download"
+                            Grid.Column="2">
+                        <iconPacks:Modern Kind="Stop" />
+                    </Button>
+                    <Controls:NumericUpDown Grid.Column="3"
+                                            Maximum="32"
+                                            Minimum="1"
+                                            NumericInputMode="Numbers"
+                                            ToolTip="Max Parallel Connections"
+                                            Value="{Binding MaxParallel}" />
+
+
+                </Grid>
+                <DockPanel DockPanel.Dock="Top"
+                           DataContext="{Binding DownloadDetail}">
                     <Grid DockPanel.Dock="Top">
-                        <DataGrid ItemsSource="{Binding RequestHeaders}"
-                                  ColumnWidth="*"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  CanUserResizeRows="False"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.CanContentScroll="True"
-                                  SelectionUnit="FullRow">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding Name}"
-                                                    IsReadOnly="True"
-                                                    Header="Name"
-                                                    Width="Auto" />
-                                <DataGridTextColumn Binding="{Binding Value}"
-                                                    IsReadOnly="True"
-                                                    Header="Value"
-                                                    Width="Auto" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-
+                        <TextBlock Text="Url:"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding URL}"
+                                   TextWrapping="WrapWithOverflow"
+                                   Grid.Column="1" />
                     </Grid>
-                    <Grid>
-                        <DataGrid ItemsSource="{Binding DownloadQueue}"
-                                  ColumnWidth="*"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  CanUserResizeRows="False"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.CanContentScroll="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding RangeStart}"
-                                                    IsReadOnly="True"
-                                                    Header="Start"
-                                                    Width="Auto" />
-                                <DataGridTextColumn Binding="{Binding RangeEnd}"
-                                                    IsReadOnly="True"
-                                                    Header="End"
-                                                    Width="Auto" />
-                                <DataGridTemplateColumn IsReadOnly="True"
-                                                        Width="*"
-                                                        Header="Progress">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="*" />
-                                                    <RowDefinition Height="5" />
-                                                </Grid.RowDefinitions>
-                                                <CheckBox IsChecked="{Binding Processed}"
-                                                          IsThreeState="True"
-                                                          HorizontalAlignment="Center"
-                                                          IsEnabled="False"
-                                                          Grid.Row="0" />
-                                                <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
-                                                                           Grid.Row="1" />
 
-                                            </Grid>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                    <Expander Header="Headers"
+                              DockPanel.Dock="Top"
+                              IsExpanded="False">
+                        <TabControl>
+                            <TabItem Header="Request"
+                                     Controls:ControlsHelper.HeaderFontSize="12"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     MaxHeight="200">
 
-                                <DataGridTemplateColumn Header="Actions"
-                                                        Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button ToolTip="Download"
-                                                        Command="{Binding CmdDownloadSession}">
+                                <DataGrid ItemsSource="{Binding RequestHeaders}"
+                                          ColumnWidth="*"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          CanUserResizeRows="False"
+                                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                          ScrollViewer.CanContentScroll="True"
+                                          SelectionUnit="FullRow">
 
-                                                    <iconPacks:PackIconMaterial Kind="Download" />
-                                                </Button>
-                                                <Button ToolTip="Abort"
-                                                        Command="{Binding CmdAbortSession}">
-                                                    <iconPacks:PackIconModern Kind="Stop" />
-                                                </Button>
-                                                <Button ToolTip="Refresh"
-                                                        Command="{Binding CmdRefreshSession}">
-                                                    <iconPacks:PackIconModern Kind="Refresh" />
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Binding="{Binding Name,StringFormat={}{0}:}"
+                                                            IsReadOnly="True"
+                                                            Header="Name"
+                                                            Width="SizeToCells" />
+                                        <DataGridTextColumn Binding="{Binding Value}"
+                                                            IsReadOnly="True"
+                                                            Header="Value"
+                                                            Width="SizeToCells" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </TabItem>
+                            <TabItem Header="Response"
+                                     Controls:ControlsHelper.HeaderFontSize="12">
 
-                        </DataGrid>
+                                <DataGrid ItemsSource="{Binding ResponseHeaders}"
+                                          ColumnWidth="*"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          CanUserResizeRows="False"
+                                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                          ScrollViewer.CanContentScroll="True"
+                                          SelectionUnit="FullRow">
 
-                    </Grid>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Binding="{Binding Name,StringFormat={}{0}:}"
+                                                            IsReadOnly="True"
+                                                            Header="Name"
+                                                            Width="SizeToCells" />
+                                        <DataGridTextColumn Binding="{Binding Value}"
+                                                            IsReadOnly="True"
+                                                            Header="Value"
+                                                            Width="SizeToCells" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </TabItem>
+
+                        </TabControl>
+                    </Expander>
+                    <ScrollViewer DockPanel.Dock="Top"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding DownloadQueue}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Width="120">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="5" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    Margin="5">
+                                            <CheckBox IsChecked="{Binding Processed}"
+                                                      IsThreeState="True"
+                                                      HorizontalAlignment="Center"
+                                                      IsEnabled="False"
+                                                      Grid.Row="0" />
+                                            <Button ToolTip="Download"
+                                                    Command="{Binding CmdDownloadQItem}">
+                                                <iconPacks:PackIconMaterial Kind="Download" />
+                                            </Button>
+                                            <Button ToolTip="Abort"
+                                                    Command="{Binding CmdAbortQItem}">
+                                                <iconPacks:PackIconModern Kind="Stop" />
+                                            </Button>
+                                        </StackPanel>
+                                        <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
+                                                                   Grid.Row="1" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel HorizontalAlignment="Center" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                    </ScrollViewer>
                 </DockPanel>
-            </Grid>
+                <!--<DataGrid DockPanel.Dock="Top"
+                              ItemsSource="{Binding DownloadQueue}"
+                              ColumnWidth="*"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding RangeStart}"
+                                                IsReadOnly="True"
+                                                Header="Start"
+                                                Width="Auto" />
+                            <DataGridTextColumn Binding="{Binding RangeEnd}"
+                                                IsReadOnly="True"
+                                                Header="End"
+                                                Width="Auto" />
+                            <DataGridTemplateColumn IsReadOnly="True"
+                                                    Width="*"
+                                                    Header="Progress">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="5" />
+                                            </Grid.RowDefinitions>
+                                            <CheckBox IsChecked="{Binding Processed}"
+                                                      IsThreeState="True"
+                                                      HorizontalAlignment="Center"
+                                                      IsEnabled="False"
+                                                      Grid.Row="0" />
+                                            <Controls:MetroProgressBar anx:ProgressBarSmoother.SmoothValue="{Binding Progress}"
+                                                                       Grid.Row="1" />
+
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Actions"
+                                                    Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button ToolTip="Download"
+                                                    Command="{Binding CmdDownloadSession}">
+
+                                                <iconPacks:PackIconMaterial Kind="Download" />
+                                            </Button>
+                                            <Button ToolTip="Abort"
+                                                    Command="{Binding CmdAbortSession}">
+                                                <iconPacks:PackIconModern Kind="Stop" />
+                                            </Button>
+                                            <Button ToolTip="Refresh"
+                                                    Command="{Binding CmdRefreshSession}">
+                                                <iconPacks:PackIconModern Kind="Refresh" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+
+                    </DataGrid>-->
+
+            </DockPanel>
         </Grid>
     </Grid>
 </Controls:MetroWindow>

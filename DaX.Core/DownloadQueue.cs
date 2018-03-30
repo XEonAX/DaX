@@ -22,11 +22,11 @@ namespace DaX
         {
             Session = dsession;
             //MaxParallel = parallelcount;
-            int rangeLower = 0;
-            int incre = 1;
+            long rangeLower = 0;
+            long incre = 1;
 
             dax_id = Guid.NewGuid().ToString();
-            int rangeDelta = Session.Size / 500;
+            long rangeDelta = Session.Size / 500;
             //List<string> ranges = new List<string>();
             //List<int> deltas = new List<int>();
 
@@ -68,6 +68,7 @@ namespace DaX
             //    Ranges.Remove(rangetoremove);
             //}
             var oS = Session.fSession;
+            tot = Session.DownloadQueue.Count;
             foreach (var r in rangestostart)
             {
                 r.Processed = null;
@@ -75,63 +76,86 @@ namespace DaX
                 requestHeaders["Range"] = "bytes=" + r.RangeStart + " - " + r.RangeEnd; //+ ranges[r];
                 var newflags = new System.Collections.Specialized.StringDictionary { { "dax_id", dax_id } };
 
-                Interlocked.Increment(ref tot);
+                //Interlocked.Increment(ref tot);
                 //tot++;
                 r.Session = FiddlerApplication.oProxy.SendRequest(requestHeaders,
                      oS.RequestBody,
                      newflags,
                      (sender, evtstatechangeargs) =>
-                     {
-                         if (evtstatechangeargs.newState == SessionStates.Done)
-                         {
-                             r.Processed = true;
-                             Interlocked.Increment(ref comp);
-                             Start(1);
-                             //comp++;
-                             Session.Progress = Convert.ToInt32((comp * 100.0) / (tot));
-                             var tempDQ = Session.DownloadQueue.ToList();
-                             //lock (Session.LockObject)
-                             foreach (var session in tempDQ)
-                             {
-                                 if (session.Session.state != SessionStates.Done)
-                                 {
-                                     return;
-                                 }
-                             }
-                             if (Session.Progress != 100) return;
-                             Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL"));
-
-                             var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
-                             var destname = idfiles[0];
-                             destname = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL", destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
-
-                             using (Stream destStream = File.OpenWrite(destname))
-                             {
-                                 foreach (string srcFileName in idfiles.OrderBy(x => x, new AlphanumComparatorFast()))
-                                 {
-                                     try
-                                     {
-                                         using (Stream srcStream = File.OpenRead(srcFileName))
-                                         {
-                                             srcStream.CopyTo(destStream);
-                                         }
-                                         File.Delete(srcFileName);
-                                     }
-                                     catch (Exception ex)
-                                     {
-                                         Console.WriteLine(ex);
-                                     }
-                                 }
-                             }
-                             Application.Current.Dispatcher.Invoke(() =>
-                             {
-                                 //Session.SubSessions.Clear();// = new ConcurrentBag<Fiddler.Session>();
-                             });
-                             GC.Collect();
-                         }
-                     });
+                     QueueItemStateChange(sender, evtstatechangeargs, r)
+                     );
 
             }
+        }
+
+        private void QueueItemStateChange(object sender, StateChangeEventArgs evtstatechangeargs, DownloadQueueItem r)
+        {
+            if (evtstatechangeargs.newState == SessionStates.Done)
+            {
+                r.Processed = true;
+                Interlocked.Increment(ref comp);
+                Start(1);
+                //comp++;
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Session.Progress = Convert.ToInt32((comp * 100.0) / (tot));
+                });
+                var tempDQ = Session.DownloadQueue.ToList();
+                //lock (Session.LockObject)
+                foreach (var session in tempDQ)
+                {
+                    lock (session.LockObject)
+                    {
+                        //Console.WriteLine(session.Session);
+                        var a = session;
+                        var b = a.Session;
+                        var c = b.state;
+                        if (c != SessionStates.Done)
+                        {
+                            return;
+                        }
+                    }
+                }
+                if (Session.Progress != 100) return;
+                lock (Session.LockObject)
+                {
+                    Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL"));
+
+                    var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
+                    if (idfiles.Length > 0)
+                    {
+
+                        var destname = idfiles[0];
+                        destname = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL", destname.Substring(destname.IndexOf("_XaD_") + "_XaD_".Length));
+
+                        using (Stream destStream = File.OpenWrite(destname))
+                        {
+                            foreach (string srcFileName in idfiles.OrderBy(x => x, new AlphanumComparatorFast()))
+                            {
+                                try
+                                {
+                                    using (Stream srcStream = File.OpenRead(srcFileName))
+                                    {
+                                        srcStream.CopyTo(destStream);
+                                    }
+                                    File.Delete(srcFileName);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex);
+                                }
+                            }
+                        }
+                    }
+                }
+                //Application.Current.Dispatcher.Invoke(() =>
+                //{
+                //    //Session.SubSessions.Clear();// = new ConcurrentBag<Fiddler.Session>();
+                //});
+                GC.Collect();
+            }
+
         }
     }
 }

@@ -86,7 +86,7 @@ namespace DaX
         {
             get
             {
-                return fSession.url;
+                return fSession.fullUrl;
             }
         }
 
@@ -97,7 +97,7 @@ namespace DaX
                 return fSession.RequestMethod;
             }
         }
-        public int Size
+        public long Size
         {
             get
             {
@@ -105,7 +105,7 @@ namespace DaX
                 if (string.IsNullOrWhiteSpace(size))
                     return -1;
                 else
-                    return int.Parse(size);
+                    return long.Parse(size);
             }
         }
 
@@ -124,7 +124,7 @@ namespace DaX
             }
         }
 
-        private int _Progress = 0;
+        private volatile int _Progress = 0;
         public int Progress
         {
             get { return _Progress; }
@@ -132,6 +132,7 @@ namespace DaX
             {
                 if (_Progress != value)
                 {
+                    Console.WriteLine(value);
                     _Progress = value;
                     NotifyPropertyChanged();
                 }
@@ -153,11 +154,29 @@ namespace DaX
             }
         }
 
+        private IEnumerable<Header> _RequestHeaders;
         public IEnumerable<Header> RequestHeaders
         {
             get
             {
-                return fSession.RequestHeaders.Select(x=>new Header(x));
+                if (_RequestHeaders == null)
+                {
+                    _RequestHeaders = fSession.RequestHeaders.Select(x => new Header(x));
+                }
+                return _RequestHeaders;
+            }
+        }
+
+        private IEnumerable<Header> _ResponseHeaders;
+        public IEnumerable<Header> ResponseHeaders
+        {
+            get
+            {
+                if (_ResponseHeaders == null)
+                {
+                    _ResponseHeaders = fSession.ResponseHeaders.Select(x => new Header(x));
+                }
+                return _ResponseHeaders;
             }
         }
         public AwaitableDelegateCommand<int> CmdDownloadSession { get; set; }

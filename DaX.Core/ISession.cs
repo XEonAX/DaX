@@ -7,7 +7,7 @@ namespace DaX
     {
         int ID { get; }
         string Method { get; }
-        int Size { get; }
+        long Size { get; }
         int Progress { get; }
         int State { get; }
         string URL { get; }
