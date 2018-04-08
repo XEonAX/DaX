@@ -133,6 +133,15 @@ namespace DaX
                      Session.Abort();
                  }
             };
+
+            CmdDownloadQItem = new SimpleCommand<DownloadQueueItem>
+            {
+                CanExecuteDelegate = (x) => { return Processed == false; },
+                ExecuteDelegate = (x) =>
+                {
+                    DownloadQueueProcessor.Start(this.DSession,this);
+                }
+            };
         }
 
         private void ProgressTimerCallback(object sender, EventArgs e)
@@ -181,13 +190,15 @@ namespace DaX
             }
         }
 
-        public SimpleCommand CmdDownloadQItem { get; set; }
+        public SimpleCommand<DownloadQueueItem> CmdDownloadQItem { get; set; }
         public SimpleCommand CmdAbortQItem { get; set; }
 
         DispatcherTimer ProgressTimer;
 
         public object LockObject = new object();
         private long contentlength = default(long);
+        internal Session DSession;
+        //internal DownloadQueueProcessor QueueProcessor;
     }
 
 

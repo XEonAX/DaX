@@ -36,19 +36,19 @@ namespace DaX
                     return oS.fSession.state != SessionStates.Aborted;
                 }
             };
-            CmdDownloadSession = new AwaitableDelegateCommand<int>(
+            CmdDownloadSession = new AwaitableDelegateCommand(
 
-                executeMethod: (MaxParallel) =>
+                executeMethod: () =>
                {
                    return Task.Run(() =>
                    {
-                       DownloadQueueProcessor dq = new DownloadQueueProcessor();
-                       dq.Initialize(this);
-                       dq.Start(MaxParallel);
+                       //DownloadQueueProcessor dq = new DownloadQueueProcessor();
+                       DownloadQueueProcessor.Initialize(this);
+                       DownloadQueueProcessor.Start(this,Config.MaxParallel);
                        //score.SegmentedDownload(oS);
                    });
                },
-                 canExecuteMethod: (oS) =>
+                 canExecuteMethod: () =>
                 {
                     return true;
                 }
@@ -179,11 +179,30 @@ namespace DaX
                 return _ResponseHeaders;
             }
         }
-        public AwaitableDelegateCommand<int> CmdDownloadSession { get; set; }
+        public AwaitableDelegateCommand CmdDownloadSession { get; set; }
         public SimpleCommand<Session> CmdAbortSession { get; set; }
         public SimpleCommand<Session> CmdRefreshSession { get; set; }
         public SimpleCommand<Session> CmdXSession { get; set; }
 
         public object LockObject = new object();
+
+
+        private Config _Config;
+        internal string dax_id;
+        internal int tot;
+        internal int comp;
+
+        public Config Config
+        {
+            get { return _Config; }
+            set
+            {
+                if (_Config != value)
+                {
+                    _Config = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
     }
 }

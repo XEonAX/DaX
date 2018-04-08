@@ -68,8 +68,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlphanumComparatorFast.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="Core.cs" />
-    <Compile Include="DownloadQueue.cs" />
+    <Compile Include="DownloadQueueProcessor.cs" />
     <Compile Include="DownloadQueueItem.cs" />
     <Compile Include="Header.cs" />
     <Compile Include="ISession.cs" />

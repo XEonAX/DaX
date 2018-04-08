@@ -10,105 +10,107 @@ using System.Windows;
 
 namespace DaX
 {
-    public class DownloadQueueProcessor
+    public static class DownloadQueueProcessor
     {
-        private string dax_id;
-        int tot = 0;
-        int comp = 0;
+        //string dax_id;
+        //int tot = 0;
+        //int comp = 0;
         //private int MaxParallel;
-        Session Session;
+        //Session Session;
         //public List<Tuple<int, int>> Ranges { get; set; } = new List<Tuple<int, int>>();
-        public void Initialize(Session dsession)
+        public static void Initialize(Session session)
         {
-            Session = dsession;
+            //Session = dsession;
             //MaxParallel = parallelcount;
             long rangeLower = 0;
             long incre = 1;
 
-            dax_id = Guid.NewGuid().ToString();
-            long rangeDelta = Session.Size / 500;
+            session.dax_id = Guid.NewGuid().ToString();
+            long rangeDelta = session.Size / session.Config.DeltaDivider;//500
             //List<string> ranges = new List<string>();
             //List<int> deltas = new List<int>();
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                dsession.DownloadQueue.Clear();
+                session.DownloadQueue.Clear();
             });
-            while (((rangeLower + (rangeDelta * incre)) < Session.Size))
+            while (((rangeLower + (rangeDelta * incre)) < session.Size))
             {
                 var rangeUpper = (rangeLower + (rangeDelta * incre));
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    dsession.DownloadQueue.Add(new DownloadQueueItem()
+                    session.DownloadQueue.Add(new DownloadQueueItem()
                     {
                         RangeStart = rangeLower,
                         RangeEnd = rangeUpper,
+                        DSession = session
                     });
                 });
                 rangeLower += (rangeDelta * incre) + 1;
                 //deltas.Add((rangeDelta * incre));
-                incre++;
+                incre += 1 * session.Config.IncrementMultiplier;//1
             }
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                dsession.DownloadQueue.Add(new DownloadQueueItem()
+                session.DownloadQueue.Add(new DownloadQueueItem()
                 {
                     RangeStart = rangeLower,
-                    RangeEnd = Session.Size
+                    RangeEnd = session.Size,
+                    DSession=session
                 });
             });
         }
 
-        public void Start(int howmany)
+        public static void Start(Session session,int howmany)
         {
-            var rangestostart = Session.DownloadQueue.Where(y => y.Processed == false).Take(howmany);
-            //foreach (var rangetoremove in rangestostart)
-            //{
-            //    Ranges.Remove(rangetoremove);
-            //}
-            var oS = Session.fSession;
-            tot = Session.DownloadQueue.Count;
+            var rangestostart = session.DownloadQueue.Where(y => y.Processed == false).Take(howmany);
             foreach (var r in rangestostart)
             {
-                r.Processed = null;
-                var requestHeaders = oS.RequestHeaders.Clone() as HTTPRequestHeaders;
-                requestHeaders["Range"] = "bytes=" + r.RangeStart + " - " + r.RangeEnd; //+ ranges[r];
-                var newflags = new System.Collections.Specialized.StringDictionary { { "dax_id", dax_id } };
-
-                //Interlocked.Increment(ref tot);
-                //tot++;
-                r.Session = FiddlerApplication.oProxy.SendRequest(requestHeaders,
-                     oS.RequestBody,
-                     newflags,
-                     (sender, evtstatechangeargs) =>
-                     QueueItemStateChange(sender, evtstatechangeargs, r)
-                     );
-
+                Start(session,r);
             }
         }
 
-        private void QueueItemStateChange(object sender, StateChangeEventArgs evtstatechangeargs, DownloadQueueItem r)
+        public static void Start(Session session,DownloadQueueItem r)
+        {
+            r.Processed = null;
+            session.tot = session.DownloadQueue.Count;
+            var oS = session.fSession;
+            var requestHeaders = oS.RequestHeaders.Clone() as HTTPRequestHeaders;
+            requestHeaders["Range"] = "bytes=" + r.RangeStart + " - " + r.RangeEnd; //+ ranges[r];
+            var newflags = new System.Collections.Specialized.StringDictionary { { "dax_id", session.dax_id } };
+
+            //Interlocked.Increment(ref tot);
+            //tot++;
+            r.Session = FiddlerApplication.oProxy.SendRequest(requestHeaders,
+                 oS.RequestBody,
+                 newflags,
+                 (sender, evtstatechangeargs) =>
+                 QueueItemStateChange(session, evtstatechangeargs, r)
+                 );
+        }
+
+        private static void QueueItemStateChange(Session session, StateChangeEventArgs evtstatechangeargs, DownloadQueueItem r)
         {
             if (evtstatechangeargs.newState == SessionStates.Done)
             {
                 r.Processed = true;
-                Interlocked.Increment(ref comp);
-                Start(1);
+                Interlocked.Increment(ref session.comp);
+                Start(session,1);
                 //comp++;
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Session.Progress = Convert.ToInt32((comp * 100.0) / (tot));
+                    session.Progress = Convert.ToInt32((session.comp * 100.0) / (session.tot));
                 });
-                var tempDQ = Session.DownloadQueue.ToList();
+                var tempDQ = session.DownloadQueue.ToList();
                 //lock (Session.LockObject)
-                foreach (var session in tempDQ)
+                foreach (var dqitem in tempDQ)
                 {
-                    lock (session.LockObject)
+                    lock (dqitem.LockObject)
                     {
                         //Console.WriteLine(session.Session);
-                        var a = session;
+                        var a = dqitem;
                         var b = a.Session;
                         var c = b.state;
                         if (c != SessionStates.Done)
@@ -117,12 +119,12 @@ namespace DaX
                         }
                     }
                 }
-                if (Session.Progress != 100) return;
-                lock (Session.LockObject)
+                if (session.Progress != 100) return;
+                lock (session.LockObject)
                 {
                     Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXDL"));
 
-                    var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
+                    var idfiles = Directory.GetFiles(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "DaXCaps"), Path.GetFileName(session.dax_id) + "_DaX_" + "*" + "_XaD_" + "*");
                     if (idfiles.Length > 0)
                     {
 

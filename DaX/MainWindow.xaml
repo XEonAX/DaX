@@ -14,6 +14,7 @@
                        Height="700"
                        Width="1400"
                        GlowBrush="{DynamicResource AccentColorBrush}"
+                       
                        TitleCharacterCasing="Normal"
                        DataContext="{Binding DaxVM,ElementName=MWindow}"
                        d:DataContext="{d:DesignInstance Type=dt:ViewModel,IsDesignTimeCreatable=True}">
@@ -89,8 +90,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <Button ToolTip="Download"
-                                        Command="{Binding CmdDownloadSession}"
-                                        CommandParameter="{Binding Path=DataContext.MaxParallel, ElementName=MWindow}">
+                                        Command="{Binding CmdDownloadSession}">
 
                                     <iconPacks:PackIconMaterial Kind="Download" />
                                 </Button>
@@ -128,6 +128,8 @@
                         <ColumnDefinition />
                         <ColumnDefinition />
                         <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Button Command="{Binding CmdMergeFiles}"
                             Grid.Column="0"
@@ -149,7 +151,19 @@
                                             Minimum="1"
                                             NumericInputMode="Numbers"
                                             ToolTip="Max Parallel Connections"
-                                            Value="{Binding MaxParallel}" />
+                                            Value="{Binding Config.MaxParallel}" />
+                    <Controls:NumericUpDown Grid.Column="4"
+                                            Maximum="10000"
+                                            Minimum="0"
+                                            NumericInputMode="Numbers"
+                                            ToolTip="IncrementMultiplier"
+                                            Value="{Binding Config.IncrementMultiplier}" />
+                    <Controls:NumericUpDown Grid.Column="5"
+                                            Maximum="10000"
+                                            Minimum="1"
+                                            NumericInputMode="Numbers"
+                                            ToolTip="DeltaDivider"
+                                            Value="{Binding Config.DeltaDivider}" />
 
 
                 </Grid>
@@ -200,7 +214,9 @@
                                 </DataGrid>
                             </TabItem>
                             <TabItem Header="Response"
-                                     Controls:ControlsHelper.HeaderFontSize="12">
+                                     Controls:ControlsHelper.HeaderFontSize="12"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     MaxHeight="200">
 
                                 <DataGrid ItemsSource="{Binding ResponseHeaders}"
                                           ColumnWidth="*"
@@ -248,7 +264,8 @@
                                                       IsEnabled="False"
                                                       Grid.Row="0" />
                                             <Button ToolTip="Download"
-                                                    Command="{Binding CmdDownloadQItem}">
+                                                    Command="{Binding CmdDownloadQItem}"
+                                                    CommandParameter="{Binding}">
                                                 <iconPacks:PackIconMaterial Kind="Download" />
                                             </Button>
                                             <Button ToolTip="Abort"

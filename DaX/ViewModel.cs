@@ -23,26 +23,29 @@ namespace DaX
             }
         }
 
+        private Config _Config;
 
-        private int _MaxParallel=5;
-
-        public int MaxParallel
+        public Config Config
         {
-            get { return _MaxParallel; }
+            get { return _Config; }
             set
             {
-                if (_MaxParallel != value)
+                if (_Config != value)
                 {
-                    _MaxParallel = value;
+                    _Config = value;
                     NotifyPropertyChanged();
                 }
             }
         }
 
 
+
+
+
         Stitcher sticher = new Stitcher();
         public ViewModel()
         {
+            Config = new Config();
             DaXCore.ResponseHeadersAvailable += DaXCore_ResponseHeadersAvailable;
             CmdMergeFiles = new SimpleCommand
             {
@@ -89,6 +92,7 @@ namespace DaX
             {
                 if (e.Session.Size > 1000)
                 {
+                    e.Session.Config = Config;
                     Sessions.Add(e.Session);
                 }
             });
